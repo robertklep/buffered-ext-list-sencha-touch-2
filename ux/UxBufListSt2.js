@@ -9,8 +9,6 @@
  * 
  */
 
-
-
 Ext.define('Ext.ux.BufferedList', {
 
 	extend: 'Ext.dataview.List',
@@ -81,7 +79,6 @@ Ext.define('Ext.ux.BufferedList', {
 
 	// override
 	initialize: function() {
-
 		// call base class initializer
 		this.callParent(arguments);
 		this.initializeMe();
@@ -107,11 +104,6 @@ Ext.define('Ext.ux.BufferedList', {
 		// variables used to store state for group header display
 		this.headerText = '';
 		this.groupHeaders = [];
-
-		// make sure grouping flags consistently initialized
-		if ( this.useGroupHeaders === undefined ) {
-			this.useGroupHeaders = this.getGrouped();
-		}
 
 		// cache the reference to our scroller object, which will be used often
 		this.scroller = this.getScrollable().getScroller();
@@ -139,7 +131,6 @@ Ext.define('Ext.ux.BufferedList', {
 
 		// object which will hold arguments for onGuaranteedRange when the store
 		// loads another page. Initialize for first render.
-
 		this.cbArgs = {
 			firstNew: 0,
 			nItems: this.getMinimumItems(),
@@ -162,26 +153,22 @@ Ext.define('Ext.ux.BufferedList', {
 		// we need to re-register all of the DataView event listeners to make
 		// them target one more div element down, to account for the wrapper
 		// div we create around our list elements. See DataView.doInitialize()
-		//var containerElem = this.elementContainer.element;
 		var containerElem = this.container.element;
 		var listeners = {
-			delegate: '> div',
-			scope	: this,
-
+			delegate	: '> div',
+			scope			: this,
 			touchstart: 'onItemTouchStart',
 			touchend  : 'onItemTouchEnd',
-			tap		  : 'onItemTap',
+			tap		  	: 'onItemTap',
 			touchmove : 'onItemTouchMove',
 			doubletap : 'onItemDoubleTap',
-			swipe	  : 'onItemSwipe'
+			swipe	  	: 'onItemSwipe'
 		};
 		listeners[this.getTriggerEvent()] = this.onItemTrigger;
 		containerElem.un(listeners);
 		listeners.delegate = '> div > div';
 		containerElem.on(listeners);
-
 		this.refresh();
-
 	},
 
 	// Rendering related functions -----------------------------------------------------------------------------------
@@ -209,11 +196,16 @@ Ext.define('Ext.ux.BufferedList', {
 			// stripe record indexes for better performance later
 			this.stripeRecordIndexes();
 
-			// if this is a grouped list, initialize relevant variables
-			if (this.getGrouped()) {
+			// if this is a grouped list, or one with an index bar, initialize
+			// relevant variables
+			if (this.getGrouped() || this.getIndexBar())
+			{
 				this.createGroupingMap();
-				this.groupHeaders = [];
-				this.createHeader();
+				if (this.getGrouped())
+				{
+					this.groupHeaders = [];
+					this.createHeader();
+				}
 			}
 
 			// show & buffer first items in the list
@@ -232,10 +224,8 @@ Ext.define('Ext.ux.BufferedList', {
 		}
 	},
 
-
 	// @private - render items into sliding window on scroll
 	renderOnScroll: function() { // startRecord optional
-
 		// cancel any cleanups pending from a scrollstop
 		this.cleanupTask.cancel();
 		
@@ -244,7 +234,6 @@ Ext.define('Ext.ux.BufferedList', {
 		if ( this.isUpdating ) {
 			return 0;
 		}
-	
 
 		var startIdx,
 			ds = this._store,
@@ -261,12 +250,13 @@ Ext.define('Ext.ux.BufferedList', {
 			topProxyHeight = this.topProxy.getHeight();
 
 		this.lastScrollPos = scrollPos;
-			
 
 		// position of top of list relative to top of visible area (+above, -below)
 		var listTopMargin = scrollPos - topProxyHeight;
+
 		// position of bottom of list relative to bottom of visible area (+above, -below)
 		var listBottomMargin = (scrollPos + thisHeight) - (topProxyHeight + listHeight);
+
 		// scrolled into "white space"
 		if ( listTopMargin <= -thisHeight || listBottomMargin >= thisHeight ) {
 			incrementalRender = false;
@@ -308,7 +298,7 @@ Ext.define('Ext.ux.BufferedList', {
 		if ( (newTop === null || newBottom === null) || 
 			 (incrementalRender && newTop >= previousTop && newBottom <= previousBottom) ) {
 			// still need to update list header appropriately
-			if ( this.useGroupHeaders && this.getPinHeaders() ) {
+			if ( this.getGrouped() && this.getPinHeaders() ) {
 				this.updateListHeader(scrollPos);
 			}
 			return 0;
@@ -320,7 +310,7 @@ Ext.define('Ext.ux.BufferedList', {
 			this.replaceItemList(newTop,this.getMinimumItems());
 		}
 		// incremental - scrolling down
-		else if(scrollDown) {
+		else if (scrollDown) {
 			startIdx = previousBottom + 1;
 			this.appendItems(startIdx,this.getBatchSize());
 		}
@@ -348,10 +338,9 @@ Ext.define('Ext.ux.BufferedList', {
 		}
 
 		// update list header appropriately
-		if ( this.useGroupHeaders && this.getPinHeaders() ) {
+		if ( this.getGrouped() && this.getPinHeaders() ) {
 			this.updateListHeader(this.scroller.position.y);
 		}
-
 	},
 
 	onScrollStart: function() {
@@ -360,7 +349,6 @@ Ext.define('Ext.ux.BufferedList', {
 
 	// @private - queue up tasks to perform on scroll end
 	onScrollStop: function() {
-
 		// prevents the list from selecting an item if the user just taps to stop the scroll
 		if ( this.getBlockScrollSelect() ) {
 			var saveLocked = this.getLocked();
@@ -373,7 +361,6 @@ Ext.define('Ext.ux.BufferedList', {
 		this.cleanupTask.delay(250);
 	},
 
-
 	// @private - render this.minimumItems() starting with the supplied index, and scroll the first
 	// item to the top of the visible area.
 	refreshItemListAt: function(startIndex) {
@@ -382,7 +369,7 @@ Ext.define('Ext.ux.BufferedList', {
 		this.replaceItemList(startIndex,this.getMinimumItems());
 		this.scrollToFirstItem();
 		// update list header appropriately
-		if ( this.useGroupHeaders && this.getPinHeaders() ) {
+		if ( this.getGrouped() && this.getPinHeaders() ) {
 			this.updateListHeader(this.scroller.position.y);
 		}
 		this.isUpdating = false;
@@ -391,27 +378,24 @@ Ext.define('Ext.ux.BufferedList', {
 	// @private - scroll the first item to the top of the visible area (by scrolling to the
 	// bottom of the top proxy).
 	scrollToFirstItem: function() {
-		var scroller = this.getScrollable().getScroller();
-
 		// refresh makes sure the scroller has correct values of container sizing, etc.
-		scroller.refresh();
+		this.scroller.refresh();
 		// suspend all events, since we want no side effects other than the scrolling position
 		// change.
-		scroller.suspendEvents();
-		scroller.scrollTo(0,this.topProxy.getHeight());
-		scroller.resumeEvents();
+		this.scroller.suspendEvents();
+		this.scroller.scrollTo(0, this.topProxy.getHeight());
+		this.scroller.resumeEvents();
 	},
 
 	// @private
 	updateListHeader: function(scrollPos) {
-		scrollPos = scrollPos || this.scroller.position.y;
+		scrollPos |= this.scroller.position.y;
 		
 		// make sure our header is created
 		if (!this.header || !this.header.renderElement.dom) {
 			this.createHeader();
 			this.header.show();
 		}
-
 
 		// List being "pulled down" at top of list. Hide header.
 		if ( scrollPos <= 0 ) {
@@ -496,7 +480,7 @@ Ext.define('Ext.ux.BufferedList', {
 		var i, 
 			configArray = [],
 			store = this._store,
-			grpHeads = this.useGroupHeaders,
+			grpHeads = this.getGrouped(),
 			record,
 			groupId,
 			itemConfig,
@@ -527,7 +511,7 @@ Ext.define('Ext.ux.BufferedList', {
 				groupId = store.getGroupString(record);
 				if ( i === this.groupStartIndex(groupId) ) {
 					// this item will be start of group
-					itemConfig.children.unshift({cls: this.headerClsShortCache, html: groupId.toUpperCase()});
+					itemConfig.children.unshift({cls: this.container.headerClsShortCache, html: groupId.toUpperCase()});
 					if ( groupHeads ) {
 						groupHeads.push(i);
 					}
@@ -618,15 +602,12 @@ Ext.define('Ext.ux.BufferedList', {
 		// replace, append, or insert new html relative to existing list
 		if ( append ) {
 			Ext.DomHelper.insertHtml('beforeEnd',this.listContainer.dom,htm);
-			//Ext.DomHelper.insertHtml('beforeEnd',this.container.element.dom,htm);
 		}
 		else if ( insert ) {
 			Ext.DomHelper.insertHtml('afterBegin',this.listContainer.dom,htm);
-			//Ext.DomHelper.insertHtml('afterBegin',this.container.element.dom,htm);
 		}
 		else if ( replace ) {
-			// XXX this.groupHeaders.splice(0);
-			//this.listContainer.update(htm);
+//			this.groupHeaders.splice(0);
 			this.listContainer.setHtml(htm);
 		}
 
@@ -653,7 +634,7 @@ Ext.define('Ext.ux.BufferedList', {
 		this.viewItemArray = Array.prototype.slice.call(this.listContainer.dom.childNodes);
 
 		// add new group headers to header list
-		if ( this.useGroupHeaders ) {
+		if ( this.getGrouped() ) {
 			nHeads = groupHeads.length;
 			groupNodes = [];
 			for ( i = 0; i < nHeads; i++ ) {
@@ -825,7 +806,7 @@ Ext.define('Ext.ux.BufferedList', {
 	},
 
 	// @private - get the group object corresponding to the given id
-	getGroupObj:function (groupId){
+	getGroupObj:function(groupId){
 		return this.groupIndexMap[this.getKeyFromId(groupId)];
 	},
 
@@ -835,10 +816,8 @@ Ext.define('Ext.ux.BufferedList', {
 		return gpo ? gpo.index : -1;
 	},
 
-
 	// @private - get group preceding the one in groupId
 	getPreviousGroup: function(groupId) {
-
 		return this.getGroupObj(groupId).prev;
 	},
 
@@ -916,7 +895,7 @@ Ext.define('Ext.ux.BufferedList', {
 			this.refreshItemListAt(firstItem);
 
 			// Set list header text to reflect new group.
-			if ( this.useGroupHeaders && this.getPinHeaders() ) {
+			if ( this.getGrouped() && this.getPinHeaders() ) {
 				this.updateHeaderText(this.getClosestGroupId(grpId).toUpperCase());
 			}
 
@@ -1177,7 +1156,5 @@ Ext.define('Ext.ux.BufferedList', {
 		}
 		this.updateItemList();
 	}
-	
-
 
 });
