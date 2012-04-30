@@ -28,7 +28,7 @@ Ext.define('Ext.ux.BufferedList', {
 		 * performance in specific cases.
 		 * @accessor
 		 */
-		 batchSize: 50,
+		batchSize: 50,
 
 		/**
 		 * @cfg {Number} cleanupBoundary
@@ -466,6 +466,11 @@ Ext.define('Ext.ux.BufferedList', {
 		// one by one.
 		if ( this.getViewItems().length > this.getCleanupBoundary() ) {
 			this.updateItemList();
+		}
+		// show some debugging
+		if (location.search.indexOf('BUFFERED_LIST_DEBUG') != -1)
+		{
+			console.log('number of rendered items', Ext.select('.x-list-item').elements.length);
 		}
 	},
 

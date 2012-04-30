@@ -2,69 +2,55 @@
 <html>
 <head>
 	<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
-	<link rel="stylesheet" href="touch/resources/css/sencha-touch.css" type="text/css">
-	<script type="text/javascript" src="touch/sencha-touch-all-debug.js"></script>
-	<script type="text/javascript" src="data/albumdata.js"></script>
-	<script type="text/javascript" src="ux/UxBufListSt2.js"></script>
-	<style type="text/css">
-		.x-list .x-list-item {
-			font-weight: bold;
-			font-size: 100%;
-			font-family:helvetica;
-		}
-	</style>  
-	<script type="text/javascript">
-	Ext.setup({
-		onReady : function() {
-			Ext.define('Albums', {
-				extend: 'Ext.data.Model',
-				fields: ['album']
-			});
+	<link 	rel="stylesheet" href="touch/resources/css/sencha-touch.css">
+	<script src="touch/sencha-touch-all-debug.js"></script>
+	<script src="data/albumdata.js"></script>
+	<script src="ux/UxBufListSt2.js"></script>
+	<script>
+		Ext.setup({
+			onReady : function() {
+				Ext.define('Albums', {
+					extend: 'Ext.data.Model',
+					fields: ['album']
+				});
 
-			var baseConfig = {
-				itemTpl	: '{album}',
-				grouped	: true,
-				indexBar: true,
-//				maxItemHeight: 75,	// must specify
-//					blockScrollSelect: true,
-//				batchSize: 10,
-
-				store: new Ext.create('Ext.data.Store',{
-					config : {
-						model: 'Albums',
-					},
-					grouper : {
-						groupFn : function(record) {
-							return record.get('album')[0].toUpperCase();
+				var baseConfig = {
+					itemTpl	: '{album}',
+					grouped	: true,
+					indexBar: true,
+					store: new Ext.create('Ext.data.Store',{
+						config : {
+							model: 'Albums',
 						},
-					},
+						grouper : {
+							groupFn : function(record) {
+								return record.get('album')[0].toUpperCase();
+							},
+						},
+						data: ListTestData
+					})
+					
+				};
 
-					data: ListTestData
-				})
-				
-			};
-
-			var list;
-			if (!Ext.os.is.iOS) {
-				list = Ext.create('Ext.ux.BufferedList',(Ext.apply(baseConfig, {
-					floating: true,
-					width: 500,
-					height: 700,
-					centered: true,
-					modal: true,
-					hideOnMaskTap: false
-				})));
+				var list;
+				if (!Ext.os.is.iOS) {
+					list = Ext.create('Ext.ux.BufferedList',(Ext.apply(baseConfig, {
+						floating: true,
+						width: 500,
+						height: 700,
+						centered: true,
+						modal: true,
+						hideOnMaskTap: false
+					})));
+				}
+				else {
+					list = Ext.create('Ext.ux.BufferedList',(Ext.apply(baseConfig, {
+						fullscreen: true
+					})));
+				}
+				Ext.Viewport.add(list);
 			}
-			else {
-				list = Ext.create('Ext.ux.BufferedList',(Ext.apply(baseConfig, {
-					fullscreen: true
-				})));
-			}
-			Ext.Viewport.add(list);
-			// test to see if data load is handled correctly
-//			list.store.loadData(ListTestData);
-		}
-	});
+		});
 	</script>
 </head>
 <body></body>
