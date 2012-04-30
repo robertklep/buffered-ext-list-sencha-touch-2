@@ -135,7 +135,7 @@ Ext.define('Ext.ux.BufferedList', {
 			nItems: this.getMinimumItems(),
 			mode: 'r'
 		};
-		this._store.on({
+		this.getStore().on({
 			guaranteedrange: this.onGuaranteedRange,
 			scope: this
 		});
@@ -175,7 +175,7 @@ Ext.define('Ext.ux.BufferedList', {
 
 	// @override of dataView function - refresh simply re-renders current item list
 	doRefresh: function() {
-		var store = this._store;
+		var store = this.getStore();
 
 		if ( this.firstRefreshDone === undefined )
 			return;
@@ -235,7 +235,7 @@ Ext.define('Ext.ux.BufferedList', {
 		}
 
 		var startIdx,
-			ds = this._store,
+			ds = this.getStore(),
 			scrollPos = this.scroller.position.y,
 			newTop = null,
 			newBottom = null, 
@@ -483,7 +483,7 @@ Ext.define('Ext.ux.BufferedList', {
 		// loop over records, building up html string
 		var i, 
 			configArray = [],
-			store = this._store,
+			store = this.getStore(),
 			grpHeads = this.getGrouped(),
 			record,
 			groupId,
@@ -659,14 +659,13 @@ Ext.define('Ext.ux.BufferedList', {
 
 	// @private - called when a range of records has been fetched from the proxy and guaranteed
 	onGuaranteedRange: function(range,start,end) {
-		var ds = this._store,
+		var ds = this.getStore(),
 			cbarg = this.cbArgs;
 
 		// load the range of records
 		ds.suspendEvents();
 		ds.loadRecords(range);
 		ds.resumeEvents();
-
 
 		// render the list items, using arguments supplied in our callback object
 		this.renderListItems(cbarg.firstNew,cbarg.nItems,cbarg.mode);
@@ -676,7 +675,7 @@ Ext.define('Ext.ux.BufferedList', {
 
 	// @private - get the record at the specified server index, compensating for buffering
 	getRecordAt: function(index) {
-		var ds = this._store,
+		var ds = this.getStore(),
 			rec = null;
 		if ( !ds.buffered ) {
 			rec = ds.getAt(index); // record has to be loaded in data
@@ -694,13 +693,13 @@ Ext.define('Ext.ux.BufferedList', {
 
 	// @private - get the record count, compensating for buffering
 	getRecordCount: function() {
-		var ds = this._store;
+		var ds = this.getStore();
 		return ds.buffered ? ds.getTotalCount() : ds.getCount();
 	},
 
 	// @private - check if the store has the necessary record range loaded
 	checkRecordsLoaded: function(firstRecord,lastRecord) {
-		var ds = this._store;
+		var ds = this.getStore();
 		if ( !ds.buffered ) {
 			return true;
 		}
@@ -724,7 +723,7 @@ Ext.define('Ext.ux.BufferedList', {
 			this.cbArgs.firstNew = firstNew;
 			this.cbArgs.nItems = nItems;
 			this.cbArgs.mode = 'r';
-			this._store.guaranteeRange(start,end);
+			this.getStore().guaranteeRange(start,end);
 		}
 	},
 
@@ -741,7 +740,7 @@ Ext.define('Ext.ux.BufferedList', {
 			this.cbArgs.firstNew = firstNew;
 			this.cbArgs.nItems = nItems;
 			this.cbArgs.mode = 'a';
-			this._store.guaranteeRange(start,end);
+			this.getStore().guaranteeRange(start,end);
 		}
 	},
 
@@ -757,7 +756,7 @@ Ext.define('Ext.ux.BufferedList', {
 			this.cbArgs.firstNew = firstNew;
 			this.cbArgs.nItems = nItems;
 			this.cbArgs.mode = 'i';
-			this._store.guaranteeRange(start,end);
+			this.getStore().guaranteeRange(start,end);
 		}
 	},
 	
@@ -836,7 +835,7 @@ Ext.define('Ext.ux.BufferedList', {
 			key,
 			firstKey,
 			record,
-			store = this._store,
+			store = this.getStore(),
 			tempMap = {},
 			groupMap = this.groupIndexMap,
 			prevGroup = '',
@@ -939,7 +938,7 @@ Ext.define('Ext.ux.BufferedList', {
 
 	// @private get (server) index associated with record
 	indexOfRecord: function(rec) {
-		return this._store.indexOfTotal(rec);
+		return this.getStore().indexOfTotal(rec);
 	},
 
 	// @private get DOM node representing list item associated with record. record is index or
@@ -958,7 +957,7 @@ Ext.define('Ext.ux.BufferedList', {
 	// @private - stripe records with total count index property - speeds up getting the index
 	// of a record. This is already done in buffered stores.
 	stripeRecordIndexes: function() {
-		var ds = this._store,
+		var ds = this.getStore(),
 		rc,
 		i;
 		if ( !ds.buffered ) {
@@ -1025,7 +1024,7 @@ Ext.define('Ext.ux.BufferedList', {
 		var me = this,
 			target = e.getTarget(),
 			index = me.recordIndexFromNode(target), // SMB patch
-			store = me._store,
+			store = me.getStore(),
 			record = this.getRecordAt(index),
 			pressedDelay = me.getPressedDelay(),
 			item = Ext.get(target);
@@ -1052,7 +1051,7 @@ Ext.define('Ext.ux.BufferedList', {
 		var me = this,
 			target = e.getTarget(),
 			index = me.recordIndexFromNode(target), // SMB patch
-			store = me._store,
+			store = me.getStore(),
 			record = this.getRecordAt(index),
 			item = Ext.get(target);
 
@@ -1077,7 +1076,7 @@ Ext.define('Ext.ux.BufferedList', {
 		var me = this,
 			target = e.getTarget(),
 			index = me.recordIndexFromNode(target), // SMB patch
-			store = me._store,
+			store = me.getStore(),
 			record = this.getRecordAt(index),
 			item = Ext.get(target);
 

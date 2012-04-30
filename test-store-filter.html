@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta 	http-equiv="Content-Type" content="text/html; charset=utf-8">
+	<link 	rel="stylesheet" href="touch/resources/css/sencha-touch.css">
+	<script src="touch/sencha-touch-all-debug.js"></script>
+	<script src="data/albumdata.js"></script>
+	<script src="ux/BufferedList.js"></script>
+	<script>
+		Ext.setup({
+			onReady : function() {
+				// define a simple model
+				Ext.define('Albums', {
+					extend: 'Ext.data.Model',
+					fields: ['album']
+				});
+
+				// define a simple store
+				Ext.create('Ext.data.Store', {
+					alias		: 'store.albums',
+					storeId	: 'AlbumStore',
+					config 	: {
+						model: 'Albums',
+					},
+					grouper : {
+						groupFn : function(record) {
+							return record.get('album')[0].toUpperCase();
+						},
+					},
+					data: ListTestData
+				});
+
+				// showing in desktop os?
+				var isDesktop = Ext.os.is.MacOS | Ext.os.is.Windows | Ext.os.is.Linux;
+
+				// create a floating config for desktops
+				var baseConfig = isDesktop ? {
+					floating			: true,
+					width					: 500,
+					height				: 500,
+					centered			: true,
+					modal					: true,
+					hideOnMaskTap	: false
+				} : { 
+					fullscreen : true
+				};
+
+				// initialize the main view
+				Ext.Viewport.add(Ext.apply({
+					xtype		: 'bufferedlist',
+					grouped	: true,
+					indexBar: true,
+					store		: Ext.getStore('AlbumStore'),
+					itemTpl	: '{album}',
+					items		: [{
+						xtype		: 'toolbar',
+						docked	: 'top',
+						items		: [{
+							xtype				: 'searchfield',
+							width				: '94%',
+							labelWidth	: 0,
+							placeHolder	: 'Search...',
+							listeners		: {
+								clearicontap	: function() {
+									this.parent.parent.getStore().clearFilter();
+								},
+								keyup	: function() {
+									var query = this.getValue();
+									var store = this.parent.parent.getStore();
+
+									store.clearFilter();
+									if (query.length)
+										store.filter('album', query, true);
+								}
+							}
+						}]
+					}]
+				}, baseConfig));
+			}
+		});
+	</script>
+</head>
+<body></body>
+</html>
