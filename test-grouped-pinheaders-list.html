@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta 	http-equiv="Content-Type" content="text/html; charset=utf-8">
+	<link 	rel="stylesheet" href="touch/resources/css/sencha-touch.css">
+	<script src="touch/sencha-touch-all-debug.js"></script>
+	<script src="data/albumdata.js"></script>
+	<script src="ux/BufferedList.js"></script>
+	<script>
+		Ext.setup({
+			onReady : function() {
+				// define a simple model
+				Ext.define('Albums', {
+					extend: 'Ext.data.Model',
+					fields: ['album']
+				});
+
+				// define a simple store
+				var store = new Ext.create('Ext.data.Store', {
+					config 	: {
+						model: 'Albums',
+					},
+					grouper : {
+						groupFn : function(record) {
+							return record.get('album')[0].toUpperCase();
+						},
+					},
+					data: ListTestData
+				});
+
+				// showing in desktop os?
+				var isDesktop = Ext.os.is.MacOS | Ext.os.is.Windows | Ext.os.is.Linux;
+
+				// create a floating config for desktops
+				var baseConfig = isDesktop ? {
+					floating			: true,
+					width					: 500,
+					height				: 500,
+					centered			: true,
+					modal					: true,
+					hideOnMaskTap	: false
+				} : { 
+					fullscreen : true
+				};
+
+				// initialize the main view
+				Ext.Viewport.add(Ext.apply({
+					xtype				: 'bufferedlist',
+					grouped			: true,
+					pinHeaders 	: true,
+					indexBar		: false,
+					store				: store,
+					itemTpl			: '{album}'
+				}, baseConfig));
+			}
+		});
+	</script>
+</head>
+<body></body>
+</html>
