@@ -10,9 +10,8 @@
  */
 
 Ext.define('Ext.ux.BufferedList', {
-
 	extend: 'Ext.dataview.List',
-
+	xtype	: 'bufferedlist',
 	config: {
 		/**
 		 * @cfg {Number} minimumItems
@@ -537,7 +536,6 @@ Ext.define('Ext.ux.BufferedList', {
 			}
 			configArray.push(itemConfig);
 		}
-		//console.log('CA', Ext.DomHelper.markup(configArray));
 		return Ext.DomHelper.markup(configArray);
 	},
 
