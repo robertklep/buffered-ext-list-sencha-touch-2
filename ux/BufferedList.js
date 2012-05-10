@@ -10,9 +10,10 @@
  */
 
 Ext.define('Ext.ux.BufferedList', {
-	extend: 'Ext.dataview.List',
-	xtype	: 'bufferedlist',
-	config: {
+	extend	: 'Ext.dataview.List',
+	xtype		: 'bufferedlist',
+	requires: [ 'Ext.util.DelayedTask' ],
+	config	: {
 		/**
 		 * @cfg {Number} minimumItems
 		 * minimum number of items to be rendered at all times.
