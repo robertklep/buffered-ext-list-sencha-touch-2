@@ -620,7 +620,7 @@ Ext.define('Ext.ux.BufferedList', {
 		else 
 		if ( replace )
 		{
-//			this.groupHeaders.splice(0);
+			this.groupHeaders.splice(0);
 			this.listContainer.setHtml(html);
 		}
 
