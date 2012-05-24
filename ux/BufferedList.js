@@ -1,12 +1,12 @@
 /*
- * 
+ *
  * Author: Scott Borduin, Lioarlan, LLC
  * License: GPL (http://www.gnu.org/licenses/gpl.html) -or- MIT (http://www.opensource.org/licenses/mit-license.php)
- * 
+ *
  * Release: 0.15
- * 
+ *
  * Acknowledgement: Based partly on public contributions from members of the Sencha.com bulletin board.
- * 
+ *
  */
 
 Ext.define('Ext.ux.BufferedList', {
@@ -97,10 +97,10 @@ Ext.define('Ext.ux.BufferedList', {
 
 		// cleanup task to be invoked on scroll stop.
 		this.cleanupTask = new Ext.util.DelayedTask(this.itemCleanup,this);
-		
+
 		// flag used to make sure we don't collide with the cleanup thread
 		this.isUpdating = false;
-	
+
 		// variables used to store state for group header display
 		this.headerText = '';
 		this.groupHeaders = [];
@@ -132,12 +132,9 @@ Ext.define('Ext.ux.BufferedList', {
 		// used to prevent multiple initial renderings - see doRefresh
 		this.firstRefreshDone = false;
 
-		// we need to re-register all of the DataView event listeners to make
-		// them target one more div element down, to account for the wrapper
-		// div we create around our list elements. See DataView.doInitialize()
-		var containerElem = this.container.element;
+		// set event handlers on our new wrapper element
 		var listeners = {
-			delegate	: '> div',
+			delegate	: 'div.ux-list-container .x-list-item',
 			scope			: this,
 			touchstart: 'onItemTouchStart',
 			touchend  : 'onItemTouchEnd',
@@ -147,9 +144,16 @@ Ext.define('Ext.ux.BufferedList', {
 			swipe	  	: 'onItemSwipe'
 		};
 		listeners[this.getTriggerEvent()] = this.onItemTrigger;
-		containerElem.un(listeners);
-		listeners.delegate = '> div > div';
-		containerElem.on(listeners);
+		this.innerElement.on(listeners);
+
+		// handle disclose button
+		this.innerElement.on({
+			delegate: '.' + this.getBaseCls() + '-disclosure',
+			tap			: 'handleItemDisclosure',
+			scope		: this
+		});
+
+		// refresh
 		this.refresh();
 	},
 
@@ -213,7 +217,7 @@ Ext.define('Ext.ux.BufferedList', {
 	renderOnScroll: function() { // startRecord optional
 		// cancel any cleanups pending from a scrollstop
 		this.cleanupTask.cancel();
-		
+
 		// if we're still executing a cleanup task, or add/remove/replace, wait
 		// for the next call
 		if ( this.isUpdating )
@@ -225,8 +229,8 @@ Ext.define('Ext.ux.BufferedList', {
 			ds = this.getStore(),
 			scrollPos = this.scroller.position.y,
 			newTop = null,
-			newBottom = null, 
-			previousTop = this.topItemRendered, 
+			newBottom = null,
+			previousTop = this.topItemRendered,
 			previousBottom = this.bottomItemRendered,
 			scrollDown = scrollPos >= this.lastScrollPos,
 			incrementalRender = false,
@@ -248,7 +252,7 @@ Ext.define('Ext.ux.BufferedList', {
 		{
 			incrementalRender = false;
 			scrollDown 				= true;
-			newTop 						= Math.max( 
+			newTop 						= Math.max(
 				Math.floor(scrollPos / this.getMaxItemHeight()) - 1,
 				0
 			);
@@ -283,12 +287,12 @@ Ext.define('Ext.ux.BufferedList', {
 		}
 
 		// no need to render anything?
-		if ( 
-				newTop === null || 
-				newBottom === null || 
+		if (
+				newTop === null ||
+				newBottom === null ||
 				(
-					incrementalRender && 
-					newTop >= previousTop && 
+					incrementalRender &&
+					newTop >= previousTop &&
 					newBottom <= previousBottom
 				)
 			)
@@ -300,7 +304,7 @@ Ext.define('Ext.ux.BufferedList', {
 			}
 			return 0;
 		}
-		
+
 		// Jumped past boundaries of currently rendered items? Replace entire item list.
 		if (this.bottomItemRendered === 0 || !incrementalRender)
 		{
@@ -308,7 +312,7 @@ Ext.define('Ext.ux.BufferedList', {
 			this.replaceItemList(newTop, this.getMinimumItems());
 		}
 		// incremental - scrolling down
-		else 
+		else
 		if (scrollDown)
 		{
 			startIdx = previousBottom + 1;
@@ -399,7 +403,7 @@ Ext.define('Ext.ux.BufferedList', {
 	// @private
 	updateListHeader: function(scrollPos) {
 		scrollPos |= this.scroller.position.y;
-		
+
 		// make sure our header is created
 		if (! this.header || ! this.header.renderElement.dom)
 		{
@@ -420,7 +424,7 @@ Ext.define('Ext.ux.BufferedList', {
 		var i,
 			headerNode,
 			headerHeight = this.header.renderElement.getHeight(),
-			nHeaders = this.groupHeaders.length, 
+			nHeaders = this.groupHeaders.length,
 			headerMoveTop = scrollPos + headerHeight,
 			groupTop,
 			transform,
@@ -466,7 +470,7 @@ Ext.define('Ext.ux.BufferedList', {
 			}
 		}
 	},
-	
+
 	// @private
 	updateHeaderText: function(groupString) {
 		if ( ! groupString )
@@ -476,14 +480,14 @@ Ext.define('Ext.ux.BufferedList', {
 			this.transformedHeader = true;
 			this.headerText = groupString;
 		}
-		else 
+		else
 		if ( groupString !== this.headerText )
 		{
 			this.header.setHtml(groupString);
 			this.headerText = groupString;
 		}
 	},
-	
+
 	// @private
 	itemCleanup: function() {
 		// item cleanup just replaces the current item list with a new, shortened
@@ -531,7 +535,7 @@ Ext.define('Ext.ux.BufferedList', {
 				{
 					// this item will be start of group
 					itemConfig.children.unshift({
-						cls	: this.container.headerClsShortCache, 
+						cls	: this.container.headerClsShortCache,
 						html: groupId.toUpperCase()
 					});
 					if ( groupHeads )
@@ -568,14 +572,14 @@ Ext.define('Ext.ux.BufferedList', {
 			{
 				return 0;
 			}
-			else 
+			else
 			if ( firstNew + nItems > sc )
 			{
 				nItems = sc - firstNew;
 			}
 			lastNew = firstNew + nItems - 1;
 		}
-		else 
+		else
 		if ( insert )
 		{
 			if ( firstNew < 0 )
@@ -593,7 +597,7 @@ Ext.define('Ext.ux.BufferedList', {
 			{
 				topProxyHeight = 0;
 			}
-			else 
+			else
 			if ( firstNode = this.nodeFromRecordIndex(firstNew) )
 			{
 				topProxyHeight = firstNode.offsetTop;
@@ -612,12 +616,12 @@ Ext.define('Ext.ux.BufferedList', {
 		{
 			Ext.DomHelper.insertHtml('beforeEnd', this.listContainer.dom, html);
 		}
-		else 
+		else
 		if ( insert )
 		{
 			Ext.DomHelper.insertHtml('afterBegin', this.listContainer.dom, html);
 		}
-		else 
+		else
 		if ( replace )
 		{
 			this.groupHeaders.splice(0);
@@ -626,18 +630,18 @@ Ext.define('Ext.ux.BufferedList', {
 
 		// Set top and bottom proxy heights appropriately, and capture indicies of first and last
 		// records currently rendered.
-		if ( append ) 
+		if ( append )
 		{
 			this.bottomProxy.setHeight(this.bottomProxy.getHeight() - (this.listContainer.getHeight() - oldListHeight));
 			this.bottomItemRendered = lastNew;
 		}
-		else 
+		else
 		if ( insert )
 		{
 			this.topProxy.setHeight(this.topProxy.getHeight() - (this.listContainer.getHeight() - oldListHeight));
 			this.topItemRendered = firstNew;
 		}
-		else 
+		else
 		if ( replace )
 		{
 			this.topProxy.setHeight(topProxyHeight);
@@ -703,7 +707,7 @@ Ext.define('Ext.ux.BufferedList', {
 	insertItems: function(firstNew, nItems) {
 		return this.renderListItems(firstNew, nItems, 'i');
 	},
-	
+
 	// @private - called on Add, Remove, Update, and cleanup.
 	updateItemList: function() {
 		// Update simply re-renders this.getMinimumItems() item nodes, starting with the first visible
@@ -888,8 +892,7 @@ Ext.define('Ext.ux.BufferedList', {
 
 	// @private get (server) index associated with record
 	indexOfRecord: function(rec) {
-		// XXX: TODO
-		return this.getStore().indexOfTotal(rec);
+		return this.getStore().indexOf(rec);
 	},
 
 	// @private get DOM node representing list item associated with record. record is index or
@@ -954,29 +957,27 @@ Ext.define('Ext.ux.BufferedList', {
 	// re-implemented for performance reasons.
 
 	// apply to the selection model to maintain visual UI cues
-	onItemTrigger: function(e) {
-		var me = this,
-			target = e.getTarget(),
-			index = me.recordIndexFromNode(target); // SMB patch
+	onItemTrigger: function(_this, index) {
 		this.selectWithEvent(this.getRecordAt(index));
 	},
 
 	doAddPressedCls: function(record) {
-		var me = this,
-		index = me.indexOfRecord(record),
-		item = me.nodeFromRecordIndex(index); // SMB patch
+		var me 		= this,
+				index = me.indexOfRecord(record),
+				item 	= me.nodeFromRecordIndex(index); // SMB patch
+
 		if ( item )
 			Ext.get(item).addCls(me.getPressedCls());
 	},
 
 	onItemTouchStart: function(e) {
-		var me = this,
-			target = e.getTarget(),
-			index = me.recordIndexFromNode(target), // SMB patch
-			store = me.getStore(),
-			record = this.getRecordAt(index),
-			pressedDelay = me.getPressedDelay(),
-			item = Ext.get(target);
+		var me 						= this,
+				target 				= e.getTarget(),
+				index 				= me.recordIndexFromNode(target), // SMB patch
+				store 				= me.getStore(),
+				record 				= this.getRecordAt(index),
+				pressedDelay 	= me.getPressedDelay(),
+				item 					= Ext.get(target);
 
 		if (record) {
 			if (pressedDelay > 0) {
@@ -997,12 +998,12 @@ Ext.define('Ext.ux.BufferedList', {
 	},
 
 	onItemTouchEnd: function(e) {
-		var me = this,
-			target = e.getTarget(),
-			index = me.recordIndexFromNode(target), // SMB patch
-			store = me.getStore(),
-			record = this.getRecordAt(index),
-			item = Ext.get(target);
+		var me 			= this,
+				target 	= e.getTarget(),
+				index 	= me.recordIndexFromNode(target), // SMB patch
+				store 	= me.getStore(),
+				record 	= this.getRecordAt(index),
+				item 		= Ext.get(target);
 
 		if (this.hasOwnProperty('pressedTimeout')) {
 			clearTimeout(this.pressedTimeout);
@@ -1022,12 +1023,12 @@ Ext.define('Ext.ux.BufferedList', {
 	},
 
 	onItemTouchMove: function(e) {
-		var me = this,
-			target = e.getTarget(),
-			index = me.recordIndexFromNode(target), // SMB patch
-			store = me.getStore(),
-			record = this.getRecordAt(index),
-			item = Ext.get(target);
+		var me 			= this,
+				target 	= e.getTarget(),
+				index 	= me.recordIndexFromNode(target), // SMB patch
+				store 	= me.getStore(),
+				record 	= this.getRecordAt(index),
+				item 		= Ext.get(target);
 
 		if (me.hasOwnProperty('pressedTimeout')) {
 			clearTimeout(me.pressedTimeout);

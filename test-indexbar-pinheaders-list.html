@@ -46,11 +46,24 @@
 				// initialize the main view
 				Ext.Viewport.add(Ext.apply({
 					xtype				: 'bufferedlist',
+					//xtype				: 'list',
 					grouped			: true,
 					pinHeaders 	: true,
 					indexBar		: true,
 					store				: store,
-					itemTpl			: '{album}'
+					itemTpl			: '{album}',
+					onItemDisclosure	: true,
+					listeners		: {
+						initialize	: function() {
+							console.log('list init', this.hasListener('itemtap'));
+						},
+						itemtap	: function() {
+							console.log('item tap');
+						},
+						disclose	: function() {
+							console.log('item disclose');
+						}
+					}
 				}, baseConfig));
 			}
 		});
