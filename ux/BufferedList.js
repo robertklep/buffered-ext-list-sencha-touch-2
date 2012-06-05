@@ -206,15 +206,11 @@ Ext.define('Ext.ux.BufferedList', {
 		}
 		else
 		{
-			var store = this.getStore();
-			if ( store && store.getCount() > 0 )
-			{
-				if (this.getGrouped())
-				{
-					this.createGroupingMap();
-				}
-				this.refreshItemListAt(0); // renders first this.getMinimumItems() nodes in store
-			}
+			if (this.getGrouped())
+      {
+          this.createGroupingMap();
+      }
+      this.refreshItemListAt(0); // renders first this.getMinimumItems() nodes in store
 		}
 	},
 
@@ -575,7 +571,7 @@ Ext.define('Ext.ux.BufferedList', {
 		{
 			if ( firstNew >= sc )
 			{
-				return 0;
+				nItems = 0;
 			}
 			else
 			if ( firstNew + nItems > sc )
@@ -790,7 +786,10 @@ Ext.define('Ext.ux.BufferedList', {
 			groupMap 	= this.groupIndexMap,
 			prevGroup = '',
 			sc 				= store.getCount();
-
+		
+		if (!sc)
+			return;
+			
 		// build temporary map of group string to store index from store records
 		for (var i = 0; i < sc; i++ )
 		{
