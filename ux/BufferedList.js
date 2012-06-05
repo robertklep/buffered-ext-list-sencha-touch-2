@@ -1064,6 +1064,7 @@ Ext.define('Ext.ux.BufferedList', {
 		var me = this,
 			target = e.getTarget(),
 			index = me.recordIndexFromNode(target), // SMB patch
+			item = Ext.get(target),
 			record = this.getRecordAt(index);
 
 		me.fireEvent('itemswipe', me, index, item, record, e);
