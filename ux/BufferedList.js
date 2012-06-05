@@ -162,6 +162,7 @@ Ext.define('Ext.ux.BufferedList', {
 
 	// @override of dataView function - refresh simply re-renders current item list
 	doRefresh: function() {
+		//this.callParent();
 		if ( this.firstRefreshDone === undefined )
 			return;
 
@@ -205,11 +206,15 @@ Ext.define('Ext.ux.BufferedList', {
 		}
 		else
 		{
-			if (this.getGrouped())
+			var store = this.getStore();
+			if ( store && store.getCount() > 0 )
 			{
-				this.createGroupingMap();
+				if (this.getGrouped())
+				{
+					this.createGroupingMap();
+				}
+				this.refreshItemListAt(0); // renders first this.getMinimumItems() nodes in store
 			}
-			this.updateItemList();
 		}
 	},
 
@@ -1064,7 +1069,6 @@ Ext.define('Ext.ux.BufferedList', {
 		var me = this,
 			target = e.getTarget(),
 			index = me.recordIndexFromNode(target), // SMB patch
-			item = Ext.get(target),
 			record = this.getRecordAt(index);
 
 		me.fireEvent('itemswipe', me, index, item, record, e);
