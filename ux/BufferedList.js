@@ -994,7 +994,7 @@ Ext.define('Ext.ux.BufferedList', {
 			single: true
 		});
 
-		me.fireEvent('itemtouchstart', me, index, target, e);
+		me.fireEvent('itemtouchstart', me, index, target, record, e);
 	},
 
 	onItemTouchEnd: function(e) {
@@ -1019,7 +1019,7 @@ Ext.define('Ext.ux.BufferedList', {
 			scope	: me
 		});
 
-		me.fireEvent('itemtouchend', me, index, target, e);
+		me.fireEvent('itemtouchend', me, index, target, record, e);
 	},
 
 	onItemTouchMove: function(e) {
@@ -1044,27 +1044,29 @@ Ext.define('Ext.ux.BufferedList', {
 		var me = this,
 			target = e.getTarget(),
 			index = me.recordIndexFromNode(target), // SMB patch
-			item = Ext.get(target);
+			item = Ext.get(target),
+			record = this.getRecordAt(index);
 
-		me.fireEvent('itemtap', me, index, item, e);
+		me.fireEvent('itemtap', me, index, item, record, e);
 	},
 
 	onItemDoubleTap: function(e) {
 		var me = this,
 			target = e.getTarget(),
 			index = me.recordIndexFromNode(target), // SMB patch
-			item = Ext.get(target);
+			item = Ext.get(target),
+			record = this.getRecordAt(index);
 
-		me.fireEvent('itemdoubletap', me, index, item, e);
+		me.fireEvent('itemdoubletap', me, index, item, record, e);
 	},
 
 	onItemSwipe: function(e) {
 		var me = this,
 			target = e.getTarget(),
 			index = me.recordIndexFromNode(target), // SMB patch
-			item = Ext.get(target);
+			record = this.getRecordAt(index);
 
-		me.fireEvent('itemswipe', me, index, item, e);
+		me.fireEvent('itemswipe', me, index, item, record, e);
 	},
 
 	// invoked by the selection model to maintain visual UI cues
