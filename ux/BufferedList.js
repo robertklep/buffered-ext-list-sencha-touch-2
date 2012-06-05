@@ -162,6 +162,7 @@ Ext.define('Ext.ux.BufferedList', {
 
 	// @override of dataView function - refresh simply re-renders current item list
 	doRefresh: function() {
+		//this.callParent();
 		if ( this.firstRefreshDone === undefined )
 			return;
 
@@ -206,10 +207,10 @@ Ext.define('Ext.ux.BufferedList', {
 		else
 		{
 			if (this.getGrouped())
-			{
-				this.createGroupingMap();
-			}
-			this.updateItemList();
+      {
+          this.createGroupingMap();
+      }
+      this.refreshItemListAt(0); // renders first this.getMinimumItems() nodes in store
 		}
 	},
 
@@ -570,7 +571,7 @@ Ext.define('Ext.ux.BufferedList', {
 		{
 			if ( firstNew >= sc )
 			{
-				return 0;
+				nItems = 0;
 			}
 			else
 			if ( firstNew + nItems > sc )
@@ -785,7 +786,10 @@ Ext.define('Ext.ux.BufferedList', {
 			groupMap 	= this.groupIndexMap,
 			prevGroup = '',
 			sc 				= store.getCount();
-
+		
+		if (!sc)
+			return;
+			
 		// build temporary map of group string to store index from store records
 		for (var i = 0; i < sc; i++ )
 		{
@@ -994,7 +998,7 @@ Ext.define('Ext.ux.BufferedList', {
 			single: true
 		});
 
-		me.fireEvent('itemtouchstart', me, index, target, e);
+		me.fireEvent('itemtouchstart', me, index, target, record, e);
 	},
 
 	onItemTouchEnd: function(e) {
@@ -1019,7 +1023,7 @@ Ext.define('Ext.ux.BufferedList', {
 			scope	: me
 		});
 
-		me.fireEvent('itemtouchend', me, index, target, e);
+		me.fireEvent('itemtouchend', me, index, target, record, e);
 	},
 
 	onItemTouchMove: function(e) {
@@ -1044,27 +1048,30 @@ Ext.define('Ext.ux.BufferedList', {
 		var me = this,
 			target = e.getTarget(),
 			index = me.recordIndexFromNode(target), // SMB patch
-			item = Ext.get(target);
+			item = Ext.get(target),
+			record = this.getRecordAt(index);
 
-		me.fireEvent('itemtap', me, index, item, e);
+		me.fireEvent('itemtap', me, index, item, record, e);
 	},
 
 	onItemDoubleTap: function(e) {
 		var me = this,
 			target = e.getTarget(),
 			index = me.recordIndexFromNode(target), // SMB patch
-			item = Ext.get(target);
+			item = Ext.get(target),
+			record = this.getRecordAt(index);
 
-		me.fireEvent('itemdoubletap', me, index, item, e);
+		me.fireEvent('itemdoubletap', me, index, item, record, e);
 	},
 
 	onItemSwipe: function(e) {
 		var me = this,
 			target = e.getTarget(),
 			index = me.recordIndexFromNode(target), // SMB patch
-			item = Ext.get(target);
+			item = Ext.get(target),
+			record = this.getRecordAt(index);
 
-		me.fireEvent('itemswipe', me, index, item, e);
+		me.fireEvent('itemswipe', me, index, item, record, e);
 	},
 
 	// invoked by the selection model to maintain visual UI cues
