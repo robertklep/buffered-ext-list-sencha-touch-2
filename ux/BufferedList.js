@@ -210,6 +210,14 @@ Ext.define('Ext.ux.BufferedList', {
 				this.createGroupingMap();
 			}
 			this.updateItemList();
+
+			store = this.getStore();
+			if (store && store.getRange() < 1) {
+				this.onStoreClear();
+			}
+			else {
+				this.hideEmptyText();
+			}
 		}
 	},
 
@@ -235,7 +243,7 @@ Ext.define('Ext.ux.BufferedList', {
 			scrollDown = scrollPos >= this.lastScrollPos,
 			incrementalRender = false,
 			maxIndex = this.getRecordCount() - 1,
-			thisHeight = this.getHeight(),
+			thisHeight = this.element.dom.clientHeight,
 			listHeight = this.listContainer.getHeight(),
 			topProxyHeight = this.topProxy.getHeight();
 
@@ -340,7 +348,7 @@ Ext.define('Ext.ux.BufferedList', {
 		// zero out bottom proxy if we're at the bottom ...
 		if ( newBottom === maxIndex )
 		{
-			var bottomPadding = this.getHeight() - this.listContainer.getHeight();
+			var bottomPadding = this.element.dom.clientHeight - this.listContainer.getHeight();
 			this.bottomProxy.setHeight(bottomPadding > 0 ? bottomPadding : 0);
 		}
 
@@ -444,7 +452,7 @@ Ext.define('Ext.ux.BufferedList', {
 					transform = (scrollPos + headerHeight) - groupTop;
 					this.translateHeader(transform);
 					// make sure list header text displaying previous group
-					this.updateHeaderText(this.getPreviousGroup(headerNode.firstChild.innerHTML).toUpperCase());
+					this.updateHeaderText(this.getPreviousGroup(headerNode.firstChild.innerHTML));
 				}
 				else
 				{
@@ -462,7 +470,7 @@ Ext.define('Ext.ux.BufferedList', {
 		// list header represents previous group text
 		if ( i < 0 && headerNode )
 		{
-			this.updateHeaderText(this.getPreviousGroup(headerNode.firstChild.innerHTML).toUpperCase());
+			this.updateHeaderText(this.getPreviousGroup(headerNode.firstChild.innerHTML));
 			if ( this.transformedHeader )
 			{
 				this.translateHeader(null);
@@ -536,7 +544,7 @@ Ext.define('Ext.ux.BufferedList', {
 					// this item will be start of group
 					itemConfig.children.unshift({
 						cls	: this.container.headerClsShortCache,
-						html: groupId.toUpperCase()
+						html: groupId
 					});
 					if ( groupHeads )
 					{
@@ -710,17 +718,30 @@ Ext.define('Ext.ux.BufferedList', {
 
 	// @private - called on Add, Remove, Update, and cleanup.
 	updateItemList: function() {
-		// Update simply re-renders this.getMinimumItems() item nodes, starting with the first visible
-		// item, and then restores any item selections. The current scroll position
-		// of the first visible item will be maintained.
-		this.isUpdating = true;
-		var visItems 		= this.getVisibleItems(true);
-		var startItem 	= visItems.length ? visItems[0] : 0;
-		// create a buffer of 3 items at top
-		startItem 			= Math.max(0, startItem - 3);
-		// replace items
-		this.replaceItemList(startItem, this.getMinimumItems());
-		this.isUpdating = false;
+		var sc = this.getStore().getCount();
+
+		if ( sc === 0 )
+		{
+			this.topProxy.setHeight(0);
+			this.bottomProxy.setHeight(0);
+			this.listContainer.setHtml('');
+			this.scroller.setDisabled(true);
+		}
+		else
+		{
+			// Update simply re-renders this.getMinimumItems() item nodes, starting with the first visible
+			// item, and then restores any item selections. The current scroll position
+			// of the first visible item will be maintained.
+			this.isUpdating = true;
+			var visItems 		= this.getVisibleItems(true);
+			var startItem 	= visItems.length ? visItems[0] : 0;
+			// create a buffer of 3 items at top
+			startItem 			= Math.max(0, startItem - 3);
+			// replace items
+			this.replaceItemList(startItem, this.getMinimumItems());
+			this.isUpdating = false;
+			this.scroller.setDisabled(false);
+		}
 	},
 
 	onBeforeHide: function() {
@@ -750,12 +771,12 @@ Ext.define('Ext.ux.BufferedList', {
 
 	// @private - get an encoded version of the string for use as a key in the hash
 	getKeyFromId: function (groupId){
-		return escape(groupId.toLowerCase());
+		return groupId;
 	},
 
 	// @private - get the group object corresponding to the given id
 	getGroupObj:function(groupId){
-		return this.groupIndexMap[this.getKeyFromId(groupId)];
+		return this.groupMap[this.getKeyFromId(groupId)];
 	},
 
 	// @private - get starting index of a group by group string (-1 if not found)
@@ -776,28 +797,21 @@ Ext.define('Ext.ux.BufferedList', {
 
 	// @private - create a map of grouping strings to start index of the groups
 	createGroupingMap: function() {
-		this.groupIndexMap = {};
+		this.groupMap = {};
 
-		var firstKey,
-			record,
-			store 		= this.getStore(),
-			tempMap 	= {},
-			groupMap 	= this.groupIndexMap,
-			prevGroup = '',
-			sc 				= store.getCount();
+		var store 		= this.getStore(),
+				prevGroup	= '',
+				sc				= store.getCount(),
+				i;
 
 		// build temporary map of group string to store index from store records
-		for (var i = 0; i < sc; i++ )
+		for (i = 0; i < sc; i++ )
 		{
-			var key = escape(store.getGroupString(store.getAt(i)).toLowerCase());
-			if ( tempMap[key] === undefined )
+			var groupId = store.getGroupString(store.getAt(i));
+			if ( this.groupMap[groupId] === undefined )
 			{
-				tempMap[key] = { index: i, closest: key, prev: prevGroup } ;
-				prevGroup = key;
-			}
-			if ( !firstKey )
-			{
-				firstKey = key;
+				this.groupMap[groupId] = { index: i, closest: groupId, prev: prevGroup } ;
+				prevGroup = groupId;
 			}
 		}
 
@@ -805,31 +819,39 @@ Ext.define('Ext.ux.BufferedList', {
 		// in our index bar, if we have a bar.
 		if (!!this.getIndexBar())
 		{
-			Ext.applyIf(this.groupIndexMap,tempMap);
+			this.groupIndexMap = {};
 
-			var letters 	= this.getIndexBar().getLetters(),
-					bc 				= letters.length,
-					idx 			= 0,
-					prevGroup = '',
-					key 			= '';
+			var l				= 0,
+					letters	= this.getIndexBar().getLetters(),
+					bc			= letters.length;
 
-			for (var i = 0; i < bc; i++ )
+			for (i = 0; i < sc; i++ )
 			{
-				var grpid 	= letters[i].toLowerCase();
-				var recobj 	= tempMap[grpid];
+					var key = store.getGroupString(store.getAt(i))[0].toUpperCase();
+					if (letters.indexOf(key) === -1)
+					{
+							key = letters[0];
+					}
 
-				if ( recobj )
-				{
-					idx = recobj.index;
-					key = recobj.closest;
-					prevGroup = recobj.prev;
-				}
-				else
-				if ( !key )
-				{
-					key = firstKey;
-				}
-				groupMap[grpid] = { index: idx, closest: key, prev: prevGroup };
+					if (this.groupIndexMap[key] === undefined)
+					{
+							var prevIdx = Math.max(i - 1, 0);
+
+							for (;letters[l] !== key; l++)
+							{
+								if (this.groupIndexMap[letters[l]] === undefined)
+								{
+										this.groupIndexMap[letters[l]] = prevIdx;
+								}
+							}
+							l++;
+
+							this.groupIndexMap[key] = i;
+					}
+			}
+			for (;l < bc; l++)
+			{
+					this.groupIndexMap[letters[l]] = sc - 1;
 			}
 		}
 		else
@@ -841,8 +863,8 @@ Ext.define('Ext.ux.BufferedList', {
 	// @private - respond to indexBar touch.
 	onIndex: function(indexbar, html, target, opts) {
 		// get first item of group from map
-		var grpId 		= html.toLowerCase();
-		var firstItem = this.groupStartIndex(grpId);
+		var grpId 		= html.toUpperCase();
+		var firstItem = this.groupIndexMap[grpId];
 
 		// render new list of items into list container
 		if ( firstItem >= 0 )
@@ -853,7 +875,7 @@ Ext.define('Ext.ux.BufferedList', {
 			// Set list header text to reflect new group.
 			if ( this.getGrouped() && this.getPinHeaders() )
 			{
-				this.updateHeaderText(this.getClosestGroupId(grpId).toUpperCase());
+				this.updateHeaderText(this.getStore().getGroupString(this.getStore().getAt(firstItem)));
 			}
 		}
 	},
@@ -927,7 +949,7 @@ Ext.define('Ext.ux.BufferedList', {
 				elems 			= this.getViewItems(),
 				nElems 			= elems.length,
 				returnArray = [],
-				thisHeight 	= this.getHeight(),
+				thisHeight 	= this.element.dom.clientHeight,
 				firstItem 	= this.topItemRendered;
 
 		for ( var i = 0; i < nElems; i++ )
@@ -1103,6 +1125,20 @@ Ext.define('Ext.ux.BufferedList', {
 
 	// @private - override
 	onStoreRemove : function(ds, record, index) {
+		if (ds.getCount() === 0) {
+			this.onStoreClear(ds);
+		}
+		else {
+			if (this.getGrouped()) {
+				this.createGroupingMap();
+			}
+			this.updateItemList();
+		}
+	},
+
+	onStoreClear : function(ds) {
+		this.callParent(arguments);
+
 		if (this.getGrouped()) {
 			this.createGroupingMap();
 		}
