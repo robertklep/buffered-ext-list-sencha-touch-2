@@ -54,14 +54,8 @@
 					itemTpl			: '{album}',
 					onItemDisclosure	: true,
 					listeners		: {
-						initialize	: function() {
-							console.log('list init', this.hasListener('itemtap'));
-						},
-						itemtap	: function() {
-							console.log('item tap');
-						},
-						disclose	: function() {
-							console.log('item disclose');
+						disclose	: function(this_, record, target, index) {
+							console.log('item disclose', record.data.album, index);
 						}
 					}
 				}, baseConfig));
