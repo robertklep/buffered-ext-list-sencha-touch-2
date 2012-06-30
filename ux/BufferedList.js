@@ -157,6 +157,16 @@ Ext.define('Ext.ux.BufferedList', {
 		this.refresh();
 	},
 
+  // handle item disclosure
+  handleItemDisclosure: function(e) {
+    var me      = this,
+        item    = e.getTarget().parentNode,
+        index   = me.recordIndexFromNode(item),
+        record  = me.getStore().getAt(index);
+
+    me.fireAction('disclose', [me, record, item, index, e], 'doDisclose');
+  },
+
 	// Rendering related functions -----------------------------------------------------------------------------------
 
 
@@ -786,10 +796,10 @@ Ext.define('Ext.ux.BufferedList', {
 			groupMap 	= this.groupIndexMap,
 			prevGroup = '',
 			sc 				= store.getCount();
-		
+
 		if (!sc)
 			return;
-			
+
 		// build temporary map of group string to store index from store records
 		for (var i = 0; i < sc; i++ )
 		{
