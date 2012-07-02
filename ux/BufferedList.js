@@ -157,6 +157,15 @@ Ext.define('Ext.ux.BufferedList', {
 		this.refresh();
 	},
 
+	// handle item disclosure
+	handleItemDisclosure:function (e) {
+		var me     = this,
+			item   = e.getTarget().parentNode,
+			index  = me.recordIndexFromNode(item),
+			record = me.getStore().getAt(index);
+
+		me.fireAction('disclose', [me, record, item, index, e], 'doDisclose');
+	},
 	// Rendering related functions -----------------------------------------------------------------------------------
 
 
@@ -578,7 +587,7 @@ Ext.define('Ext.ux.BufferedList', {
 		{
 			if ( firstNew >= sc )
 			{
-				return 0;
+				nItems = 0;
 			}
 			else
 			if ( firstNew + nItems > sc )
@@ -798,11 +807,20 @@ Ext.define('Ext.ux.BufferedList', {
 	// @private - create a map of grouping strings to start index of the groups
 	createGroupingMap: function() {
 		this.groupMap = {};
+		if (!!this.getIndexBar())
+		{
+			this.groupIndexMap = {};
+		}
 
-		var store 		= this.getStore(),
-				prevGroup	= '',
-				sc				= store.getCount(),
-				i;
+		var store     = this.getStore(),
+			prevGroup = '',
+			sc        = store.getCount(),
+			i;
+
+		if (!sc)
+		{
+			return;
+		}
 
 		// build temporary map of group string to store index from store records
 		for (i = 0; i < sc; i++ )
@@ -819,8 +837,6 @@ Ext.define('Ext.ux.BufferedList', {
 		// in our index bar, if we have a bar.
 		if (!!this.getIndexBar())
 		{
-			this.groupIndexMap = {};
-
 			var l				= 0,
 					letters	= this.getIndexBar().getLetters(),
 					bc			= letters.length;
@@ -1016,7 +1032,7 @@ Ext.define('Ext.ux.BufferedList', {
 			single: true
 		});
 
-		me.fireEvent('itemtouchstart', me, index, target, e);
+		me.fireEvent('itemtouchstart', me, index, target, record, e);
 	},
 
 	onItemTouchEnd: function(e) {
@@ -1041,7 +1057,7 @@ Ext.define('Ext.ux.BufferedList', {
 			scope	: me
 		});
 
-		me.fireEvent('itemtouchend', me, index, target, e);
+		me.fireEvent('itemtouchend', me, index, target, record, e);
 	},
 
 	onItemTouchMove: function(e) {
@@ -1066,27 +1082,30 @@ Ext.define('Ext.ux.BufferedList', {
 		var me = this,
 			target = e.getTarget(),
 			index = me.recordIndexFromNode(target), // SMB patch
-			item = Ext.get(target);
+			item = Ext.get(target),
+			record = this.getRecordAt(index);
 
-		me.fireEvent('itemtap', me, index, item, e);
+		me.fireEvent('itemtap', me, index, item, record, e);
 	},
 
 	onItemDoubleTap: function(e) {
 		var me = this,
 			target = e.getTarget(),
 			index = me.recordIndexFromNode(target), // SMB patch
-			item = Ext.get(target);
+			item = Ext.get(target),
+			record = this.getRecordAt(index);
 
-		me.fireEvent('itemdoubletap', me, index, item, e);
+		me.fireEvent('itemdoubletap', me, index, item, record, e);
 	},
 
 	onItemSwipe: function(e) {
 		var me = this,
 			target = e.getTarget(),
 			index = me.recordIndexFromNode(target), // SMB patch
-			item = Ext.get(target);
+			item = Ext.get(target),
+			record = this.getRecordAt(index);
 
-		me.fireEvent('itemswipe', me, index, item, e);
+		me.fireEvent('itemswipe', me, index, item, record, e);
 	},
 
 	// invoked by the selection model to maintain visual UI cues
