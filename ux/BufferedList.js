@@ -212,7 +212,7 @@ Ext.define('Ext.ux.BufferedList', {
 			this.updateItemList();
 
 			store = this.getStore();
-			if (store && store.getRange() < 1) {
+			if (store && store.getCount() < 1) {
 				this.onStoreClear();
 			}
 			else {
