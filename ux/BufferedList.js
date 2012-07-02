@@ -205,7 +205,7 @@ Ext.define('Ext.ux.BufferedList', {
 		}
 		else
 		{
-			if (this.getGrouped())
+			if (this.getGrouped() || this.getIndexBar())
 			{
 				this.createGroupingMap();
 			}
