@@ -157,15 +157,15 @@ Ext.define('Ext.ux.BufferedList', {
 		this.refresh();
 	},
 
-  // handle item disclosure
-  handleItemDisclosure: function(e) {
-    var me      = this,
-        item    = e.getTarget().parentNode,
-        index   = me.recordIndexFromNode(item),
-        record  = me.getStore().getAt(index);
+	// handle item disclosure
+	handleItemDisclosure: function(e) {
+		var me			= this,
+				item		= e.getTarget().parentNode,
+				index	 = me.recordIndexFromNode(item),
+				record	= me.getStore().getAt(index);
 
-    me.fireAction('disclose', [me, record, item, index, e], 'doDisclose');
-  },
+		me.fireAction('disclose', [me, record, item, index, e], 'doDisclose');
+	},
 
 	// Rendering related functions -----------------------------------------------------------------------------------
 
@@ -836,35 +836,43 @@ Ext.define('Ext.ux.BufferedList', {
 
 			var l				= 0,
 					letters	= this.getIndexBar().getLetters(),
-					bc			= letters.length;
+					bc			= letters.length,
+          key;
 
 			for (i = 0; i < sc; i++ )
 			{
-					var key = store.getGroupString(store.getAt(i))[0].toUpperCase();
-					if (letters.indexOf(key) === -1)
+				var groupstring = store.getGroupString(store.getAt(i));
+
+				// groupstring can be empty
+				if (groupstring.length)
+					key = groupstring[0].toUpperCase();
+				else
+					key = '';
+
+				if (letters.indexOf(key) === -1)
+				{
+					key = letters[0];
+				}
+
+				if (this.groupIndexMap[key] === undefined)
+				{
+					var prevIdx = Math.max(i - 1, 0);
+
+					for (;letters[l] !== key; l++)
 					{
-							key = letters[0];
+						if (this.groupIndexMap[letters[l]] === undefined)
+						{
+								this.groupIndexMap[letters[l]] = prevIdx;
+						}
 					}
+					l++;
 
-					if (this.groupIndexMap[key] === undefined)
-					{
-							var prevIdx = Math.max(i - 1, 0);
-
-							for (;letters[l] !== key; l++)
-							{
-								if (this.groupIndexMap[letters[l]] === undefined)
-								{
-										this.groupIndexMap[letters[l]] = prevIdx;
-								}
-							}
-							l++;
-
-							this.groupIndexMap[key] = i;
-					}
+					this.groupIndexMap[key] = i;
+				}
 			}
 			for (;l < bc; l++)
 			{
-					this.groupIndexMap[letters[l]] = sc - 1;
+				this.groupIndexMap[letters[l]] = sc - 1;
 			}
 		}
 		else
