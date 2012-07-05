@@ -22,7 +22,7 @@
 					},
 					grouper : {
 						groupFn : function(record) {
-							return record.get('album')[0].toUpperCase();
+							return record.get('album').substring(0,2).toUpperCase();
 						},
 					},
 					data: ListTestData
