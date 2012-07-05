@@ -869,7 +869,7 @@ Ext.define('Ext.ux.BufferedList', {
 		}
 		else
 		{
-			this.groupIndexMap = tempMap;
+			this.groupIndexMap = this.groupMap;
 		}
 	},
 
