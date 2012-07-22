@@ -875,10 +875,6 @@ Ext.define('Ext.ux.BufferedList', {
 				this.groupIndexMap[letters[l]] = sc - 1;
 			}
 		}
-		else
-		{
-			this.groupIndexMap = this.groupMap;
-		}
 	},
 
 	// @private - respond to indexBar touch.
