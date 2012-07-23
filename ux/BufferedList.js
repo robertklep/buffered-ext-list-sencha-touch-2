@@ -781,7 +781,7 @@ Ext.define('Ext.ux.BufferedList', {
 
 	// @private - get an encoded version of the string for use as a key in the hash
 	getKeyFromId: function (groupId){
-		return groupId;
+		return groupId.toUpperCase();
 	},
 
 	// @private - get the group object corresponding to the given id
@@ -820,7 +820,7 @@ Ext.define('Ext.ux.BufferedList', {
 		// build temporary map of group string to store index from store records
 		for (i = 0; i < sc; i++ )
 		{
-			var groupId = store.getGroupString(store.getAt(i));
+			var groupId = store.getGroupString(store.getAt(i)).toUpperCase();
 			if ( this.groupMap[groupId] === undefined )
 			{
 				this.groupMap[groupId] = { index: i, closest: groupId, prev: prevGroup } ;
